@@ -1,9 +1,11 @@
-# H2 Database Configuration (in-memory for development)
+# Server Port (optional, default is 8080)
+# server:
+#   port: 8080
+
 spring:
   application:
     name: ai-workflow-backend
   datasource:
-
     # H2 Database Configuration (in-memory for development)
     url: jdbc:h2:mem:aiworkflowdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
     driverClassName: org.h2.Driver
@@ -23,6 +25,12 @@ spring:
       enabled: true
       path: /h2-console
 
-# Server Port (optional, default is 8080)
-# server:
-#   port: 8080
+  # =================================================================
+  # Spring AI Model Configuration
+  # =================================================================
+  ai:
+    openai:
+      api-key: ${OPENAI_API_KEY}
+      chat:
+        options:
+          model: gpt-4o

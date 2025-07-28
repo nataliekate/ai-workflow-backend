@@ -1,100 +1,72 @@
 package com.example.aiworkflowbackend.controller;
 
+import com.example.aiworkflowbackend.dto.WorkflowDtos.*;
 import com.example.aiworkflowbackend.model.Workflow;
 import com.example.aiworkflowbackend.repository.WorkflowRepository;
+import com.example.aiworkflowbackend.service.WorkflowService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Optional;
 
 /**
- * REST Controller for managing Workflow entities.
- * @RestController: Marks this class as a Spring REST controller, handling incoming web requests.
- * @RequestMapping("/api/workflows"): Base path for all endpoints in this controller.
- * @CrossOrigin(origins = "http://localhost:5173"): Allows requests from your React development server.
- * Adjust this in production.
+ * REST Controller that exposes endpoints for the workflow and model APIs.
  */
 @RestController
 @RequestMapping("/api/workflows")
-@CrossOrigin(origins = "http://localhost:5173") // Crucial for connecting with your React frontend
+// Use @CrossOrigin if your React app is served from a different origin
+@CrossOrigin(origins = "http://localhost:5173")
 public class WorkflowController {
+    private final WorkflowService workflowService;
 
-    @Autowired // Injects an instance of WorkflowRepository
-    private WorkflowRepository workflowRepository;
-
-    /**
-     * GET /api/workflows
-     * Retrieves all workflows from the database.
-     * @return A list of Workflow objects.
-     */
-    @GetMapping
-    public List<Workflow> getAllWorkflows() {
-        return workflowRepository.findAll();
+    public WorkflowController(WorkflowService workflowService) {
+        this.workflowService = workflowService;
     }
 
-    /**
-     * GET /api/workflows/{id}
-     * Retrieves a single workflow by its ID.
-     * @param id The ID of the workflow to retrieve.
-     * @return ResponseEntity with the Workflow object if found, or 404 Not Found.
-     */
-    @GetMapping("/{id}")
-    public ResponseEntity<Workflow> getWorkflowById(@PathVariable Long id) {
-        Optional<Workflow> workflow = workflowRepository.findById(id);
-        return workflow.map(ResponseEntity::ok) // If workflow is present, return 200 OK with workflow
-                .orElseGet(() -> ResponseEntity.notFound().build()); // Else, return 404 Not Found
+    // --- Endpoints for Model Providers ---
+    @GetMapping("/models")
+    public ResponseEntity<List<ModelProviderDto>> getAvailableModels() {
+        return ResponseEntity.ok(workflowService.getAvailableModels());
     }
 
-    /**
-     * POST /api/workflows
-     * Creates a new workflow.
-     * @param workflow The Workflow object sent in the request body.
-     * @return The saved Workflow object with its generated ID.
-     */
-    @PostMapping
-    @ResponseStatus(HttpStatus.CREATED) // Returns 201 Created status
-    public Workflow createWorkflow(@RequestBody Workflow workflow) {
-        return workflowRepository.save(workflow);
+    // --- CRUD Endpoints for Workflows ---
+
+    @PostMapping("/workflows")
+    public ResponseEntity<WorkflowDto> createWorkflow(@RequestBody CreateWorkflowRequest request) {
+        WorkflowDto createdWorkflow = workflowService.createWorkflow(request);
+        return new ResponseEntity<>(createdWorkflow, HttpStatus.CREATED);
     }
 
-    /**
-     * PUT /api/workflows/{id}
-     * Updates an existing workflow.
-     * @param id The ID of the workflow to update.
-     * @param workflowDetails The updated Workflow object sent in the request body.
-     * @return ResponseEntity with the updated Workflow object if found, or 404 Not Found.
-     */
-    @PutMapping("/{id}")
-    public ResponseEntity<Workflow> updateWorkflow(@PathVariable Long id, @RequestBody Workflow workflowDetails) {
-        Optional<Workflow> optionalWorkflow = workflowRepository.findById(id);
-        if (optionalWorkflow.isPresent()) {
-            Workflow existingWorkflow = optionalWorkflow.get();
-            existingWorkflow.setName(workflowDetails.getName());
-            existingWorkflow.setNodesJson(workflowDetails.getNodesJson());
-            existingWorkflow.setEdgesJson(workflowDetails.getEdgesJson());
-            // You might want to update other fields if they exist (e.g., updatedAt)
-            return ResponseEntity.ok(workflowRepository.save(existingWorkflow));
-        } else {
-            return ResponseEntity.notFound().build();
-        }
+    @GetMapping("/workflows")
+    public ResponseEntity<List<WorkflowDto>> getAllWorkflows() {
+        return ResponseEntity.ok(workflowService.getAllWorkflows());
     }
 
-    /**
-     * DELETE /api/workflows/{id}
-     * Deletes a workflow by its ID.
-     * @param id The ID of the workflow to delete.
-     * @return ResponseEntity with 204 No Content if successful, or 404 Not Found.
-     */
-    @DeleteMapping("/{id}")
+    @GetMapping("/workflows/{id}")
+    public ResponseEntity<WorkflowDto> getWorkflowById(@PathVariable Long id) {
+        return ResponseEntity.ok(workflowService.getWorkflowById(id));
+    }
+
+    @PutMapping("/workflows/{id}")
+    public ResponseEntity<WorkflowDto> updateWorkflow(@PathVariable Long id, @RequestBody UpdateWorkflowRequest request) {
+        return ResponseEntity.ok(workflowService.updateWorkflow(id, request));
+    }
+
+    @DeleteMapping("/workflows/{id}")
     public ResponseEntity<Void> deleteWorkflow(@PathVariable Long id) {
-        if (workflowRepository.existsById(id)) { // Check if the workflow exists before deleting
-            workflowRepository.deleteById(id);
-            return ResponseEntity.noContent().build(); // 204 No Content
-        } else {
-            return ResponseEntity.notFound().build(); // 404 Not Found
-        }
+        workflowService.deleteWorkflow(id);
+        return ResponseEntity.noContent().build();
     }
+
+    // --- Endpoint for Workflow Execution ---
+
+    @PostMapping("/workflows/{id}/execute")
+    public ResponseEntity<ExecuteWorkflowResponse> executeWorkflow(
+            @PathVariable Long id,
+            @RequestBody ExecuteWorkflowRequest request) {
+        return ResponseEntity.ok(workflowService.executeWorkflow(id, request));
+    }
+
 }

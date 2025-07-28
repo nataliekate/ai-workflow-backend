@@ -55,9 +55,11 @@ public class Workflow {
     @Column(columnDefinition = "TEXT")
     private String edgesJson;
 
-    // You can add more fields here if needed, e.g., userId, createdAt, updatedAt
-    // private String userId;
-    // private Instant createdAt;
-    // private Instant updatedAt;
+    @Column(nullable = false, length = 2048)
+    private String promptTemplate;
 
+    public Workflow(String name, String promptTemplate) {
+        this.name = name;
+        this.promptTemplate = promptTemplate;
+    }
 }
