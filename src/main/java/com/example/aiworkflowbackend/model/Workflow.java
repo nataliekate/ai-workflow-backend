@@ -12,33 +12,23 @@ import lombok.NoArgsConstructor;
 
 /**
  * Represents a workflow entity stored in the database.
- * @Entity: Marks this class as a JPA entity, mapped to a database table.
- * @Data: Lombok annotation to automatically generate getters, setters, toString, equals, and hashCode.
- * @NoArgsConstructor: Lombok annotation to generate a no-argument constructor (required by JPA).
- * @AllArgsConstructor: Lombok annotation to generate a constructor with all fields.
+ * The workflow's structure, including individual node details like prompt templates,
+ * is stored in the nodesJson and edgesJson fields.
  */
 @Entity
 @Data
 @NoArgsConstructor
-@AllArgsConstructor
 public class Workflow {
-    /**
-     * Primary key for the Workflow entity.
-     * @Id: Marks the field as the primary key.
-     * @GeneratedValue(strategy = GenerationType.IDENTITY): Configures the primary key to be
-     * auto-incremented by the database.
-     */
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    /**
-     * The name of the workflow, provided by the user.
-     */
+    @Column(nullable = false, unique = true)
     private String name;
 
     /**
-     * Stores the JSON string representation of React Flow nodes.
+     * Stores the JSON representation of the workflow's nodes.
      * @Lob: Indicates that this field can store large objects (useful for long JSON strings).
      * @Column(columnDefinition = "TEXT"): Specifies the database column type as TEXT,
      * which can hold larger strings than VARCHAR.
@@ -48,18 +38,15 @@ public class Workflow {
     private String nodesJson;
 
     /**
-     * Stores the JSON string representation of React Flow edges.
-     * Similar to nodesJson, it's a large text field.
+     * Stores the JSON representation of the workflow's edges (connections).
      */
     @Lob
     @Column(columnDefinition = "TEXT")
     private String edgesJson;
 
-    @Column(nullable = false, length = 2048)
-    private String promptTemplate;
-
-    public Workflow(String name, String promptTemplate) {
+    public Workflow(String name, String nodesJson, String edgesJson) {
         this.name = name;
-        this.promptTemplate = promptTemplate;
+        this.nodesJson = nodesJson;
+        this.edgesJson = edgesJson;
     }
 }

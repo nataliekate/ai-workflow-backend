@@ -15,10 +15,11 @@ import java.util.List;
  * REST Controller that exposes endpoints for the workflow and model APIs.
  */
 @RestController
-@RequestMapping("/api/workflows")
+@RequestMapping("/api")
 // Use @CrossOrigin if your React app is served from a different origin
-@CrossOrigin(origins = "http://localhost:5173")
+// @CrossOrigin(origins = "http://localhost:3000")
 public class WorkflowController {
+
     private final WorkflowService workflowService;
 
     public WorkflowController(WorkflowService workflowService) {
@@ -30,8 +31,6 @@ public class WorkflowController {
     public ResponseEntity<List<ModelProviderDto>> getAvailableModels() {
         return ResponseEntity.ok(workflowService.getAvailableModels());
     }
-
-    // --- CRUD Endpoints for Workflows ---
 
     @PostMapping("/workflows")
     public ResponseEntity<WorkflowDto> createWorkflow(@RequestBody CreateWorkflowRequest request) {
@@ -60,13 +59,28 @@ public class WorkflowController {
         return ResponseEntity.noContent().build();
     }
 
-    // --- Endpoint for Workflow Execution ---
+    // --- Execution Endpoints ---
 
-    @PostMapping("/workflows/{id}/execute")
-    public ResponseEntity<ExecuteWorkflowResponse> executeWorkflow(
-            @PathVariable Long id,
+    /**
+     * Executes a single, specified node within a workflow.
+     * Ideal for testing or debugging a specific step.
+     */
+    @PostMapping("/workflows/{id}/executeNode")
+    public ResponseEntity<ExecuteResponse> executeSingleNode(
+            @PathVariable("id") Long nodeId,
+            @RequestBody ExecuteSingleNodeRequest request) {
+        return ResponseEntity.ok(workflowService.executeSingleNode(nodeId, request));
+    }
+
+    /**
+     * Executes the entire workflow from the start node to the end node.
+     * This is the main orchestration endpoint.
+     */
+    @PostMapping("/workflows/{id}/executeFlow")
+    public ResponseEntity<ExecuteResponse> executeWorkflow(
+            @PathVariable("id") Long workflowId,
             @RequestBody ExecuteWorkflowRequest request) {
-        return ResponseEntity.ok(workflowService.executeWorkflow(id, request));
+        return ResponseEntity.ok(workflowService.executeWorkflow(workflowId, request));
     }
 
 }
